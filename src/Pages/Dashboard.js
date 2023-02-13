@@ -1,5 +1,4 @@
 import React from "react";
-import axios from "axios";
 import * as yup from "yup";
 import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
@@ -8,8 +7,6 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Dashboard = () => {
   const newValues = {};
-  const authToken = localStorage.getItem("token");
-  const url = "http://192.168.192.227:4000/admin/module/";
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -86,7 +83,6 @@ const Dashboard = () => {
   const apiConfig = {
     headers: {
       "Content-Type": "application/json",
-      Authorization: ` ${authToken}`,
     },
   };
 

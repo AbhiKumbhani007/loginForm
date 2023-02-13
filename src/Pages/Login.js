@@ -10,8 +10,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // const url = "http://192.168.192.227:4000/admin/login/dologin";
-
   const validationSchema = yup.object({
     email: yup.string().email("Invalid Email").required("Required"),
     password: yup.string().min(4).max(32).required("Required"),
@@ -25,7 +23,6 @@ const Login = () => {
     await api
       .post("/login/dologin", userObject)
       .then((res) => {
-        // const data = res.data;
         console.log(res);
         const data = res.data;
         return data;
