@@ -1,10 +1,11 @@
 import React from "react";
 import * as yup from "yup";
+import Modal from "./Modal";
 import api from "../api/interceptor";
+import { toast } from "react-toastify";
 import useAuth from "../Context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Dashboard = () => {
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [showModal, setShowModal] = React.useState(false);
   const [formData, setFormData] = React.useState([]);
   const [initialData, setInitialData] = React.useState({
     maleName: "",
@@ -103,6 +105,10 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const handleModal = () => {
+    setShowModal(!showModal);
+  };
+
   const getUserData = async () => {
     await api
       .get(url)
@@ -135,16 +141,6 @@ const Dashboard = () => {
         });
       })
       .catch((err) => {
-        toast.error(err.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
         console.log("error", err);
       });
   };
@@ -166,16 +162,6 @@ const Dashboard = () => {
         });
       })
       .catch((err) => {
-        toast.error(err.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
         console.log("error", err);
       });
   };
@@ -607,13 +593,29 @@ const Dashboard = () => {
                       </td>
                       <td className="text-sm text-black font-light px-6 py-4 whitespace-nowrap">
                         <button
+                          onClick={() => {
+                            if (window.confirm("Are you sure?")) {
+                              deleteRowData(user.id);
+                            }
+                          }}
+                          // onClick={() => {
+                          //   handleModal();
+                          // }}
                           data-mdb-ripple="true"
                           data-mdb-ripple-color="light"
                           className="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out"
-                          onClick={() => deleteRowData(user.id)}
                         >
                           Delete
                         </button>
+                        {/* {showModal && (
+                          <Modal
+                            onConfirm={() => deleteRowData(user.id)}
+                            title="Delete data"
+                            body="Are you sure you want to delete this data?"
+                            onCancel={() => setShowModal(false)}
+                            confirmText="Yes"
+                          />
+                        )} */}
                       </td>
                     </tr>
                   ))}

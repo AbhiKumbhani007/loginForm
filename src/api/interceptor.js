@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const api = axios.create({
   baseURL: "http://192.168.192.227:4000/admin/",
@@ -21,6 +22,16 @@ api.interceptors.response.use(
     return response;
   },
   function (error) {
+    toast.error(error.message, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
     return Promise.reject(error);
   }
 );
