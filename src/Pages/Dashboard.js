@@ -1,12 +1,14 @@
 import React from "react";
 import axios from "axios";
 import * as yup from "yup";
+import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Dashboard = () => {
   const newValues = {};
+  const authToken = localStorage.getItem("token");
   const url = "http://192.168.192.227:4000/admin/module/";
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
@@ -81,6 +83,13 @@ const Dashboard = () => {
     { label: "Female", id: 2 },
   ];
 
+  const apiConfig = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: ` ${authToken}`,
+    },
+  };
+
   React.useEffect(() => {
     getUserData();
   }, []);
@@ -91,8 +100,8 @@ const Dashboard = () => {
   };
 
   const getUserData = async () => {
-    await axios
-      .get(url)
+    await api
+      .get("/module", apiConfig)
       .then((res) => {
         const data = res.data;
         return data.data;
@@ -106,17 +115,27 @@ const Dashboard = () => {
   };
 
   const addUserData = async (newValues) => {
-    await axios
-      .post(url, newValues)
+    await api
+      .post("/module", newValues, apiConfig)
       .then((res) => {
-        getUserData()
+        getUserData();
       })
       .catch((err) => {
         console.log("error", err);
       });
   };
 
-  const submitForm = (values, { resetForm }) => {
+  const deleteRowData = async (id) => {
+    const deletUrl = "/module/";
+    await api
+      .delete(deletUrl.concat(`/${id}`), apiConfig)
+      .then(() => getUserData())
+      .catch((err) => {
+        console.log("error", err);
+      });
+  };
+
+  const submitForm = (values) => {
     if (values.gender === "Male") {
       values.femaleName = "";
     } else if (values.gender === "Female") {
@@ -129,34 +148,20 @@ const Dashboard = () => {
       }
     });
     addUserData(newValues);
-    resetForm();
   };
 
-  const deleteRowData = async (id) => {
-    // const deleteID = {}
-    await axios
-      .delete(url.concat(`/${id}`))
-      .then((res) => {
-        getUserData()
-      })
-      .catch((err) => {
-        console.log("error", err);
-      });
-  };
-
-  const updateRowData = (id) => {
-    const data = formData.at(id);
+  const updateRowData = (user, id) => {
     setTimeout(() => {
       setInitialData(() => {
-        initialData.maleName = data.maleName;
-        initialData.femaleName = data.femaleName;
-        initialData.age = data.age;
-        initialData.email = data.email;
-        initialData.country = data.country;
-        initialData.gender = data.gender;
-        initialData.joiningdate = data.joiningdate;
-        initialData.maleBio = data.maleBio;
-        initialData.hobbie = data.hobbie;
+        initialData.maleName = user.maleName;
+        initialData.femaleName = user.femaleName;
+        initialData.age = user.age;
+        initialData.email = user.email;
+        initialData.country = user.country;
+        initialData.gender = user.gender;
+        initialData.joiningdate = user.joiningdate;
+        initialData.maleBio = user.maleBio;
+        initialData.hobbie = user.hobbie;
       });
     }, 1000);
   };
@@ -167,7 +172,21 @@ const Dashboard = () => {
         validationSchema={schema}
         initialValues={initialData}
         onSubmit={(values, { resetForm }) => {
-          submitForm(values, { resetForm });
+          submitForm(values);
+          setTimeout(() => {
+            setInitialData(() => {
+              initialData.maleName = "";
+              initialData.femaleName = "";
+              initialData.age = "";
+              initialData.email = "";
+              initialData.country = "";
+              initialData.gender = "";
+              initialData.joiningdate = "";
+              initialData.maleBio = "";
+              initialData.hobbie = [];
+            });
+          }, 1000);
+          resetForm();
         }}
       >
         {({ values }) => (
@@ -269,7 +288,9 @@ const Dashboard = () => {
                     {values.gender === "Male" && (
                       <>
                         <div>
-                          <label className="cursor-pointer text-base">Name: </label>
+                          <label className="cursor-pointer text-base">
+                            Name:{" "}
+                          </label>
                           <Field
                             name="maleName"
                             placeholder="Name"
@@ -287,7 +308,9 @@ const Dashboard = () => {
                         </div>
                         <br />
                         <div>
-                          <label className="cursor-pointer text-base">Bio: </label>
+                          <label className="cursor-pointer text-base">
+                            Bio:{" "}
+                          </label>
                           <Field
                             name="maleBio"
                             as="textarea"
@@ -309,7 +332,9 @@ const Dashboard = () => {
                     {values.gender === "Female" && (
                       <>
                         <div>
-                          <label className="cursor-pointer text-base">Name: </label>
+                          <label className="cursor-pointer text-base">
+                            Name:{" "}
+                          </label>
                           <Field
                             name="femaleName"
                             placeholder="Name"
@@ -331,7 +356,9 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <div className="pb-3">
-                      <label className="cursor-pointer text-base">Country: </label>
+                      <label className="cursor-pointer text-base">
+                        Country:{" "}
+                      </label>
                     </div>
                     <Field
                       name="country"
@@ -355,7 +382,9 @@ const Dashboard = () => {
                     <br />
                   </div>
                   <div>
-                    <label className="cursor-pointer text-base">Hobbies: </label>
+                    <label className="cursor-pointer text-base">
+                      Hobbies:{" "}
+                    </label>
                     <br />
                     <br />
                     {Hobbies.map((hobbie) => (
@@ -483,10 +512,10 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {formData.map((user,index) => (
+                  {formData.map((user, index) => (
                     <tr key={user.id} className="border-b">
                       <td className="text-sm text-black font-light px-6 py-4 whitespace-nowrap">
-                        {index+1}
+                        {index + 1}
                       </td>
                       <td className="text-sm text-black font-light px-6 py-4 whitespace-nowrap">
                         {user.maleName === "" || user.maleName == null
@@ -526,7 +555,7 @@ const Dashboard = () => {
                           data-mdb-ripple="true"
                           data-mdb-ripple-color="light"
                           className="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
-                          onClick={updateRowData}
+                          onClick={() => updateRowData(user, index)}
                         >
                           Update
                         </button>

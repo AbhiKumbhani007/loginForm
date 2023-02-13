@@ -1,6 +1,7 @@
 import React from "react";
-import axios from "axios";
+// import axios from "axios";
 import * as yup from "yup";
+import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -9,33 +10,28 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const url = "https://api.helperacademy.com/mobile/account/login";
+  // const url = "http://192.168.192.227:4000/admin/login/dologin";
 
   const validationSchema = yup.object({
     email: yup.string().email("Invalid Email").required("Required"),
     password: yup.string().min(4).max(32).required("Required"),
   });
 
-  const callApi = async (email, password) => {
+  const loginApi = async (email, password) => {
     const userObject = {
-      email_address: email,
+      email: email,
       password: password,
-      fcm_token: "fcm_token",
-      device_udid: "UUID",
-      device_type: "chrome",
-      device_model: "1.0.0",
-      os_type: "deviceInfo.os",
-      os_version: "1.0.0",
-      app_version: "1.0.0",
     };
-    await axios
-      .post(url, userObject)
+    await api
+      .post("/login/dologin", userObject)
       .then((res) => {
+        // const data = res.data;
+        console.log(res);
         const data = res.data;
         return data;
       })
       .then((data) => {
-        localStorage.setItem("token", data["data"].login_token);
+        localStorage.setItem("token", data["data"].token);
       })
       .catch((err) => {
         console.log("error", err);
@@ -55,7 +51,7 @@ const Login = () => {
           localStorage.setItem("username", values.email);
           localStorage.setItem("password", values.password);
           localStorage.setItem("isAuthenticated", true);
-          callApi(values.email, values.password);
+          loginApi(values.email, values.password);
           login().then(() => {
             navigate("/dashboard");
           });
