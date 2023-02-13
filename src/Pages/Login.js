@@ -1,9 +1,9 @@
 import React from "react";
-// import axios from "axios";
 import * as yup from "yup";
 import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Login = () => {
@@ -23,14 +23,39 @@ const Login = () => {
     await api
       .post("/login/dologin", userObject)
       .then((res) => {
-        console.log(res);
         const data = res.data;
         return data;
       })
       .then((data) => {
+        toast.success(data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        return data;
+      })
+      .then((data) => {
         localStorage.setItem("token", data["data"].token);
+        login().then(() => {
+          navigate("/dashboard");
+        });
       })
       .catch((err) => {
+        toast.error(err.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         console.log("error", err);
       });
   };
@@ -47,11 +72,8 @@ const Login = () => {
         onSubmit={(values, { resetForm }) => {
           localStorage.setItem("username", values.email);
           localStorage.setItem("password", values.password);
-          localStorage.setItem("isAuthenticated", true);
           loginApi(values.email, values.password);
-          login().then(() => {
-            navigate("/dashboard");
-          });
+          // localStorage.getItem("token") &&
           resetForm();
         }}
       >

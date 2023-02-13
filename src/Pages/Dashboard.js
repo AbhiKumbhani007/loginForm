@@ -2,11 +2,14 @@ import React from "react";
 import * as yup from "yup";
 import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
+import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
 const Dashboard = () => {
   const newValues = {};
+  const url = "/module/";
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -22,6 +25,10 @@ const Dashboard = () => {
     maleBio: "",
     hobbie: [],
   });
+
+  React.useEffect(() => {
+    getUserData();
+  }, []);
 
   const schema = yup.object({
     age: yup.string().required("Required"),
@@ -49,7 +56,7 @@ const Dashboard = () => {
       .matches(
         /(^0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4}$)/,
         "Invalid Date"
-      ) // for all date formats: ^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(\d{4})$|^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-(\d{4})$|^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$|^(\d{4})-(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])$
+      )
       .min(minDate, "Date should be greater than 01-01-1753")
       .required("Enter Date in DD-MM-YYYY format"),
   });
@@ -80,24 +87,25 @@ const Dashboard = () => {
     { label: "Female", id: 2 },
   ];
 
-  const apiConfig = {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  React.useEffect(() => {
-    getUserData();
-  }, []);
-
   const onLogOut = () => {
-    logout();
+    logout().then(() => {
+      toast.success("Logged out", {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    });
     navigate("/");
   };
 
   const getUserData = async () => {
     await api
-      .get("/module", apiConfig)
+      .get(url)
       .then((res) => {
         const data = res.data;
         return data.data;
@@ -112,21 +120,62 @@ const Dashboard = () => {
 
   const addUserData = async (newValues) => {
     await api
-      .post("/module", newValues, apiConfig)
+      .post(url, newValues)
       .then((res) => {
         getUserData();
+        toast.success(res.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
       })
       .catch((err) => {
+        toast.error(err.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         console.log("error", err);
       });
   };
 
   const deleteRowData = async (id) => {
-    const deletUrl = "/module/";
     await api
-      .delete(deletUrl.concat(`/${id}`), apiConfig)
-      .then(() => getUserData())
+      .delete(url.concat(`/${id}`))
+      .then((res) => {
+        getUserData();
+        toast.warn(res.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      })
       .catch((err) => {
+        toast.error(err.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         console.log("error", err);
       });
   };
