@@ -1,10 +1,12 @@
 import React from "react";
-import * as yup from "yup";
-import api from "../api/interceptor";
-import useAuth from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+
+import * as yup from "yup";
 import { toast } from "react-toastify";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+
+import api from "../api/interceptor";
+import useAuth from "../Context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();

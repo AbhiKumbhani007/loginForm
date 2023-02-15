@@ -1,11 +1,14 @@
 import React from "react";
-import * as yup from "yup";
-import api from "../api/interceptor";
-import { toast } from "react-toastify";
-import useAuth from "../Context/AuthContext";
-import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+
+import * as yup from "yup";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+
+import api from "../api/interceptor";
+import ConfirmBox from "./ConfirmBox";
+import useAuth from "../Context/AuthContext";
 
 const Dashboard = () => {
   const newValues = {};
@@ -14,6 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isUpdate, setIsUpdate] = React.useState(false);
+  const [showConfirmBox, setShowConfirmBox] = React.useState(false);
   const [formData, setFormData] = React.useState([]);
   const [initialData, setInitialData] = React.useState({
     maleName: "",
@@ -112,57 +116,42 @@ const Dashboard = () => {
       })
       .then((data) => {
         setFormData(data);
-      })
-      .catch((err) => {
-        console.log("error", err);
       });
   };
 
   const addUserData = async (newValues) => {
-    await api
-      .post(url, newValues)
-      .then((res) => {
-        getUserData();
-        toast.success(res.data.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      })
-      .catch((err) => {
-        console.log("error", err);
+    await api.post(url, newValues).then((res) => {
+      getUserData();
+      toast.success(res.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
       });
+    });
   };
 
   const deleteRowData = async (id) => {
-    await api
-      .delete(url.concat(`/${id}`))
-      .then((res) => {
-        getUserData();
-        toast.warn(res.data.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      })
-      .catch((err) => {
-        console.log("error", err);
+    await api.delete(url.concat(`/${id}`)).then((res) => {
+      getUserData();
+      toast.warn(res.data.message, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
       });
+    });
   };
 
   const updateUserData = async (data) => {
-    console.log(url.concat(`${data.id}`));
-    console.log(data);
     await api
       .put(url.concat(`${data.id}`), data)
       .then((res) => {
@@ -182,25 +171,7 @@ const Dashboard = () => {
         setTimeout(() => {
           window.location.reload();
         }, 1000);
-      })
-      .catch((err) => {
-        console.log("error", err);
       });
-  };
-
-  const submitForm = (values) => {
-    if (values.gender === "Male") {
-      values.femaleName = "";
-    } else if (values.gender === "Female") {
-      values.maleName = "";
-      values.maleBio = "";
-    }
-    Object.keys(values).forEach((key) => {
-      if (values[key] !== "") {
-        newValues[key] = values[key];
-      }
-    });
-    isUpdate ? updateUserData(newValues) : addUserData(newValues);
   };
 
   const updateRowData = (user) => {
@@ -218,6 +189,33 @@ const Dashboard = () => {
         initialData.hobbie = user.hobbie;
       });
     }, 1000);
+  };
+
+  const submitForm = (values) => {
+    if (values.gender === "Male") {
+      values.femaleName = "";
+    } else if (values.gender === "Female") {
+      values.maleName = "";
+      values.maleBio = "";
+    }
+    Object.keys(values).forEach((key) => {
+      if (values[key] !== "") {
+        newValues[key] = values[key];
+      }
+    });
+    isUpdate ? updateUserData(newValues) : addUserData(newValues);
+  };
+
+  const handleDeleteClick = () => {
+    setShowConfirmBox(true);
+  };
+
+  const handleConfirm = () => {
+    setShowConfirmBox(false);
+  };
+
+  const handleCancel = () => {
+    setShowConfirmBox(false);
   };
 
   return (
@@ -606,17 +604,23 @@ const Dashboard = () => {
                       </td>
                       <td className="text-sm text-black font-light px-6 py-4 whitespace-nowrap">
                         <button
-                          onClick={() => {
-                            if (window.confirm("Are you sure?")) {
-                              deleteRowData(user.id);
-                            }
-                          }}
+                          onClick={handleDeleteClick}
                           data-mdb-ripple="true"
                           data-mdb-ripple-color="light"
                           className="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out"
                         >
                           Delete
                         </button>
+                        {showConfirmBox && (
+                          <ConfirmBox
+                            message="Are you sure you want to delete?"
+                            onConfirm={() => {
+                              deleteRowData(user.id);
+                              handleConfirm();
+                            }}
+                            onCancel={handleCancel}
+                          />
+                        )}
                       </td>
                     </tr>
                   ))}

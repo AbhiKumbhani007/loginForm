@@ -32,6 +32,7 @@ api.interceptors.response.use(
       progress: undefined,
       theme: "light",
     });
+    console.log("error", error);
     return Promise.reject(error);
   }
 );
