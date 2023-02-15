@@ -1,6 +1,5 @@
 import React from "react";
 import * as yup from "yup";
-import Modal from "./Modal";
 import api from "../api/interceptor";
 import { toast } from "react-toastify";
 import useAuth from "../Context/AuthContext";
@@ -14,7 +13,7 @@ const Dashboard = () => {
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [showModal, setShowModal] = React.useState(false);
+  const [isUpdate, setIsUpdate] = React.useState(false);
   const [formData, setFormData] = React.useState([]);
   const [initialData, setInitialData] = React.useState({
     maleName: "",
@@ -39,18 +38,18 @@ const Dashboard = () => {
     country: yup.string().required("Required"),
     maleName: yup.string().when("gender", {
       is: "Male",
-      then: yup.string().required(),
-      otherwise: yup.string().notRequired(),
+      then: yup.string().nullable().required(),
+      otherwise: yup.string().nullable().notRequired(),
     }),
     maleBio: yup.string().when("gender", {
       is: "Male",
-      then: yup.string().required("Male Bio is Required"),
-      otherwise: yup.string().notRequired(),
+      then: yup.string().nullable().required("Male Bio is Required"),
+      otherwise: yup.string().nullable().notRequired(),
     }),
     femaleName: yup.string().when("gender", {
       is: "Female",
-      then: yup.string().required(),
-      otherwise: yup.string().notRequired(),
+      then: yup.string().nullable().required(),
+      otherwise: yup.string().nullable().notRequired(),
     }),
     hobbie: yup.array().min(1, "select atleast one country").required(),
     joiningdate: yup
@@ -104,11 +103,6 @@ const Dashboard = () => {
     });
     navigate("/");
   };
-
-  const handleModal = () => {
-    setShowModal(!showModal);
-  };
-
   const getUserData = async () => {
     await api
       .get(url)
@@ -166,6 +160,34 @@ const Dashboard = () => {
       });
   };
 
+  const updateUserData = async (data) => {
+    console.log(url.concat(`${data.id}`));
+    console.log(data);
+    await api
+      .put(url.concat(`${data.id}`), data)
+      .then((res) => {
+        getUserData();
+        toast.success(res.data.message, {
+          position: toast.POSITION.TOP_RIGHT,
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      })
+      .then(() => {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      })
+      .catch((err) => {
+        console.log("error", err);
+      });
+  };
+
   const submitForm = (values) => {
     if (values.gender === "Male") {
       values.femaleName = "";
@@ -178,12 +200,13 @@ const Dashboard = () => {
         newValues[key] = values[key];
       }
     });
-    addUserData(newValues);
+    isUpdate ? updateUserData(newValues) : addUserData(newValues);
   };
 
-  const updateRowData = (user, id) => {
+  const updateRowData = (user) => {
     setTimeout(() => {
       setInitialData(() => {
+        initialData.id = user.id;
         initialData.maleName = user.maleName;
         initialData.femaleName = user.femaleName;
         initialData.age = user.age;
@@ -204,19 +227,6 @@ const Dashboard = () => {
         initialValues={initialData}
         onSubmit={(values, { resetForm }) => {
           submitForm(values);
-          setTimeout(() => {
-            setInitialData(() => {
-              initialData.maleName = "";
-              initialData.femaleName = "";
-              initialData.age = "";
-              initialData.email = "";
-              initialData.country = "";
-              initialData.gender = "";
-              initialData.joiningdate = "";
-              initialData.maleBio = "";
-              initialData.hobbie = [];
-            });
-          }, 1000);
           resetForm();
         }}
       >
@@ -316,74 +326,74 @@ const Dashboard = () => {
                       )}
                     />
                     <br />
-                    {values.gender === "Male" && (
-                      <>
-                        <div>
-                          <label className="cursor-pointer text-base">
-                            Name:{" "}
-                          </label>
-                          <Field
-                            name="maleName"
-                            placeholder="Name"
-                            type="text"
-                            className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
-                          />
-                          <ErrorMessage
-                            name="maleName"
-                            render={(msg) => (
-                              <span className="text-xs tracking-wide text-red-600">
-                                {msg}
-                              </span>
-                            )}
-                          />
-                        </div>
-                        <br />
-                        <div>
-                          <label className="cursor-pointer text-base">
-                            Bio:{" "}
-                          </label>
-                          <Field
-                            name="maleBio"
-                            as="textarea"
-                            placeholder="Bio"
-                            className="form-control block w-full px-4 py-2 mt-2 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
-                          />
-                          <ErrorMessage
-                            name="maleBio"
-                            render={(msg) => (
-                              <span className="text-xs tracking-wide text-red-600">
-                                {msg}
-                              </span>
-                            )}
-                          />
-                        </div>
-                        <br />
-                      </>
-                    )}
-                    {values.gender === "Female" && (
-                      <>
-                        <div>
-                          <label className="cursor-pointer text-base">
-                            Name:{" "}
-                          </label>
-                          <Field
-                            name="femaleName"
-                            placeholder="Name"
-                            type="text"
-                            className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
-                          />
-                          <ErrorMessage
-                            name="femaleName"
-                            render={(msg) => (
-                              <span className="text-xs tracking-wide text-red-600">
-                                {msg}
-                              </span>
-                            )}
-                          />
-                        </div>
-                        <br />
-                      </>
-                    )}
+                    {/* {values.gender === "Male" && (
+                      <> */}
+                    <div>
+                      <label className="cursor-pointer text-base">
+                        Male Name:{" "}
+                      </label>
+                      <Field
+                        name="maleName"
+                        placeholder="Male Name"
+                        type="text"
+                        className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      />
+                      <ErrorMessage
+                        name="maleName"
+                        render={(msg) => (
+                          <span className="text-xs tracking-wide text-red-600">
+                            {msg}
+                          </span>
+                        )}
+                      />
+                    </div>
+                    <br />
+                    <div>
+                      <label className="cursor-pointer text-base">
+                        Male Bio:{" "}
+                      </label>
+                      <Field
+                        name="maleBio"
+                        as="textarea"
+                        placeholder="Male Bio"
+                        className="form-control block w-full px-4 py-2 mt-2 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                      />
+                      <ErrorMessage
+                        name="maleBio"
+                        render={(msg) => (
+                          <span className="text-xs tracking-wide text-red-600">
+                            {msg}
+                          </span>
+                        )}
+                      />
+                    </div>
+                    <br />
+                    {/* </>
+                    )} */}
+                    {/* {values.gender === "Female" && (
+                      <> */}
+                    <div>
+                      <label className="cursor-pointer text-base">
+                        Female Name:{" "}
+                      </label>
+                      <Field
+                        name="femaleName"
+                        placeholder="Female Name"
+                        type="text"
+                        className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      />
+                      <ErrorMessage
+                        name="femaleName"
+                        render={(msg) => (
+                          <span className="text-xs tracking-wide text-red-600">
+                            {msg}
+                          </span>
+                        )}
+                      />
+                    </div>
+                    <br />
+                    {/* </>
+                    )} */}
                   </div>
                   <div>
                     <div className="pb-3">
@@ -586,7 +596,10 @@ const Dashboard = () => {
                           data-mdb-ripple="true"
                           data-mdb-ripple-color="light"
                           className="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
-                          onClick={() => updateRowData(user, index)}
+                          onClick={() => {
+                            setIsUpdate(true);
+                            updateRowData(user, index);
+                          }}
                         >
                           Update
                         </button>
@@ -598,24 +611,12 @@ const Dashboard = () => {
                               deleteRowData(user.id);
                             }
                           }}
-                          // onClick={() => {
-                          //   handleModal();
-                          // }}
                           data-mdb-ripple="true"
                           data-mdb-ripple-color="light"
                           className="inline-block px-6 py-2.5 bg-red-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-red-700 hover:shadow-lg focus:bg-red-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-red-800 active:shadow-lg transition duration-150 ease-in-out"
                         >
                           Delete
                         </button>
-                        {/* {showModal && (
-                          <Modal
-                            onConfirm={() => deleteRowData(user.id)}
-                            title="Delete data"
-                            body="Are you sure you want to delete this data?"
-                            onCancel={() => setShowModal(false)}
-                            confirmText="Yes"
-                          />
-                        )} */}
                       </td>
                     </tr>
                   ))}
