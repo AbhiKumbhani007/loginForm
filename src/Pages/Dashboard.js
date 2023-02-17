@@ -1,31 +1,31 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
-import * as yup from "yup";
+import { ErrorMessage, Field, Form, Formik } from "formik";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as yup from "yup";
 
-import ConfirmBox from "./ConfirmBox";
 import useAuth from "../Context/AuthContext";
 import {
   addUserDataApi,
+  deleteUserDataApi,
   getUserDataApi,
   updateUserDataApi,
-  deleteUserDataApi,
 } from "../Redux/userDataSlice";
+import ConfirmBox from "./ConfirmBox";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const userdata = useSelector((state) => state.userData);
-  const formData = userdata.userData;
   const newValues = {};
   const minDate = 1 - 1 - 1753;
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [userData, setUserData] = React.useState([]);
   const [editingId, setEditingId] = React.useState(0);
   const [isUpdate, setIsUpdate] = React.useState(false);
+  const userdata = useSelector((state) => state.userData);
   const [showConfirmBox, setShowConfirmBox] = React.useState(false);
   const [initialData, setInitialData] = React.useState({
     maleName: "",
@@ -40,8 +40,9 @@ const Dashboard = () => {
   });
 
   React.useEffect(() => {
+    setUserData(userdata.userData);
     getUserData();
-  }, []);
+  }, [userdata.userData]);
 
   const schema = yup.object({
     age: yup.string().required("Required"),
@@ -121,17 +122,10 @@ const Dashboard = () => {
 
   const addUserData = async (newValues) => {
     dispatch(addUserDataApi(newValues));
-    setTimeout(() => {
-      window.location.reload();
-    });
-
   };
 
   const deleteRowData = async (id) => {
     dispatch(deleteUserDataApi(id));
-    setTimeout(() => {
-      window.location.reload();
-    });
   };
 
   const updateUserData = async (data) => {
@@ -142,7 +136,7 @@ const Dashboard = () => {
     dispatch(updateUserDataApi(updateData));
     setTimeout(() => {
       window.location.reload();
-    });
+    },1000)
   };
 
   const updateRowData = (user) => {
@@ -522,7 +516,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {formData.map((user, index) => (
+                  {userData.map((user, index) => (
                     <tr key={user.id} className="border-b">
                       <td className="text-sm text-black font-light px-6 py-4 whitespace-nowrap">
                         {index + 1}
