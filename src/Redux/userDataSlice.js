@@ -1,8 +1,9 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../api/interceptor";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
+import api from "../api/interceptor";
 const initialState = {
   userData: [],
+  userAuthed: false,
 };
 const url = "/module/";
 
@@ -75,6 +76,16 @@ export const deleteUserDataApi = createAsyncThunk(
   }
 );
 
+export const loginWithEmailAndPassword = createAsyncThunk(
+  "login",
+  async (data) => {
+    const response = await api.post("/login/dologin", data);
+    const resData = response.data;
+    console.log(resData);
+    return resData;
+  }
+);
+
 const userDataSlice = createSlice({
   name: "userData",
   initialState: initialState,
@@ -97,6 +108,10 @@ const userDataSlice = createSlice({
         (item) => item.id === action.payload.data.id
       );
       state.userData.splice(index, 1);
+    });
+    builder.addCase(loginWithEmailAndPassword.fulfilled, (state, action) => {
+      localStorage.setItem("token", action.payload.data.token);
+      state.userAuthed = true;
     });
   },
 });

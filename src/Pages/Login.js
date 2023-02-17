@@ -1,16 +1,18 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useDispatch, useSelector } from "react-redux";
 import * as yup from "yup";
-import { toast } from "react-toastify";
-import { Formik, Form, Field, ErrorMessage } from "formik";
 
-import api from "../api/interceptor";
 import useAuth from "../Context/AuthContext";
+import { loginWithEmailAndPassword } from "../Redux/userDataSlice";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const isUserAuthed = useSelector((state) => state.userData.userAuthed);
+  const dispatch = useDispatch();
 
   const validationSchema = yup.object({
     email: yup.string().email("Invalid Email").required("Required"),
@@ -18,37 +20,14 @@ const Login = () => {
   });
 
   const loginApi = async (email, password) => {
-    const userObject = {
+    const data = {
       email: email,
       password: password,
     };
-    await api
-      .post("/login/dologin", userObject)
-      .then((res) => {
-        const data = res.data;
-        return data;
-      })
-      .then((data) => {
-        toast.success(data.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-        return data;
-      })
-      .then((data) => {
-        localStorage.setItem("token", data["data"].token);
-        login().then(() => {
-          navigate("/dashboard");
-        });
-      })
-      .catch((err) => {
-        console.log("error", err);
+    dispatch(loginWithEmailAndPassword(data));
+    isUserAuthed &&
+      login().then(() => {
+        navigate("/dashboard");
       });
   };
 
