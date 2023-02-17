@@ -1,24 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 import * as yup from "yup";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 
-import api from "../api/interceptor";
 import ConfirmBox from "./ConfirmBox";
 import useAuth from "../Context/AuthContext";
+import {
+  addUserDataApi,
+  getUserDataApi,
+  updateUserDataApi,
+  deleteUserDataApi,
+} from "../Redux/userDataSlice";
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const userdata = useSelector((state) => state.userData);
+  const formData = userdata.userData;
   const newValues = {};
-  const url = "/module/";
   const minDate = 1 - 1 - 1753;
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [editingId, setEditingId] = React.useState(0);
   const [isUpdate, setIsUpdate] = React.useState(false);
   const [showConfirmBox, setShowConfirmBox] = React.useState(false);
-  const [formData, setFormData] = React.useState([]);
   const [initialData, setInitialData] = React.useState({
     maleName: "",
     femaleName: "",
@@ -108,76 +116,38 @@ const Dashboard = () => {
     navigate("/");
   };
   const getUserData = async () => {
-    await api
-      .get(url)
-      .then((res) => {
-        const data = res.data;
-        return data.data;
-      })
-      .then((data) => {
-        setFormData(data);
-      });
+    dispatch(getUserDataApi());
   };
 
   const addUserData = async (newValues) => {
-    await api.post(url, newValues).then((res) => {
-      getUserData();
-      toast.success(res.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+    dispatch(addUserDataApi(newValues));
+    setTimeout(() => {
+      window.location.reload();
     });
+
   };
 
   const deleteRowData = async (id) => {
-    await api.delete(url.concat(`/${id}`)).then((res) => {
-      getUserData();
-      toast.warn(res.data.message, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+    dispatch(deleteUserDataApi(id));
+    setTimeout(() => {
+      window.location.reload();
     });
   };
 
   const updateUserData = async (data) => {
-    await api
-      .put(url.concat(`${data.id}`), data)
-      .then((res) => {
-        getUserData();
-        toast.success(res.data.message, {
-          position: toast.POSITION.TOP_RIGHT,
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-        });
-      })
-      .then(() => {
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      });
+    const updateData = {
+      id: editingId,
+      data: data,
+    };
+    dispatch(updateUserDataApi(updateData));
+    setTimeout(() => {
+      window.location.reload();
+    });
   };
 
   const updateRowData = (user) => {
     setTimeout(() => {
       setInitialData(() => {
-        initialData.id = user.id;
         initialData.maleName = user.maleName;
         initialData.femaleName = user.femaleName;
         initialData.age = user.age;
@@ -188,6 +158,7 @@ const Dashboard = () => {
         initialData.maleBio = user.maleBio;
         initialData.hobbie = user.hobbie;
       });
+      setEditingId(user.id);
     }, 1000);
   };
 
